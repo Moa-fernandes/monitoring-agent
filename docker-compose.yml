@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: monitoring_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: monitoring
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - monitoring-agent_default
+
+  agent:
+    build: ./agent
+    container_name: monitoring_agent
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - monitoring-agent_default
+
+  viaipe:
+    build: ./viaipe-collector
+    container_name: viaipe_collector
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - monitoring-agent_default
+
+  grafana:
+    build: ./grafana
+    container_name: monitoring_grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - monitoring-agent_default
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+volumes:
+  postgres_data:
+
+networks:
+  monitoring-agent_default:
+    driver: bridge

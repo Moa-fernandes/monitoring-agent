@@ -1,0 +1,25 @@
+{
+    "dashboard": {
+      "id": null,
+      "title": "Monitoring Dashboard",
+      "timezone": "browser",
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Latência dos Sites Monitorados",
+          "targets": [
+            {
+              "refId": "A",
+              "format": "time_series",
+              "datasource": "PostgreSQL",
+              "rawSql": "SELECT timestamp AS \"time\", host, latency FROM network_monitor ORDER BY timestamp DESC;",
+              "timeColumn": "timestamp",
+              "metricColumn": "host"
+            }
+          ]
+        }
+      ]
+    },
+    "overwrite": true
+  }
+  
