@@ -1,132 +1,67 @@
-# Monitoring Agent - DevOps RNP 
+#  Monitoring Agent - Dashboard com Grafana, PostgreSQL e Docker
 
-Este projeto é um **agente de monitoramento** que coleta métricas de rede, incluindo latência, tempo de carregamento de páginas web e códigos de status HTTP. Além disso, consome dados da API ViaIpe para análise de disponibilidade e uso de banda. Todos os dados são armazenados em um banco de dados PostgreSQL e visualizados através de dashboards no Grafana.
+##  **Descrição do Projeto**
+Este projeto tem como objetivo monitorar a latência de sites e coletar estatísticas da plataforma ViaIpe. Os dados são armazenados em um banco de dados PostgreSQL e visualizados através de dashboards no Grafana.
 
-##  Objetivo
-- Monitorar latência e disponibilidade de sites estratégicos (Google, YouTube, RNP)
-- Coletar métricas da API ViaIpe
-- Armazenar os resultados em um banco de dados PostgreSQL
-- Criar dashboards no Grafana para análise e visualização dos dados
+##  **Tecnologias Utilizadas**
+- **Python** (Coleta e processamento de dados)
+- **PostgreSQL** (Armazenamento de dados)
+- **Grafana** (Visualização dos dados)
+- **Docker & Docker Compose** (Gerenciamento dos containers)
 
----
+##  **Como Executar o Projeto**
 
-##  Arquitetura do Projeto
-O projeto segue uma abordagem baseada em **containers Docker**, garantindo escalabilidade e fácil replicação. Os principais componentes são:
-
-###  **1. Agente de Monitoramento (monitoring_agent)**
-- Coleta latência, tempo de carregamento e código de status HTTP das seguintes páginas:
-  - `google.com`
-  - `youtube.com`
-  - `rnp.br`
-- Insere os dados no PostgreSQL.
-
-###  **2. Coletor ViaIpe (viaipe_collector)**
-- Consome dados da API **[https://viaipe.rnp.br/api/norte](https://viaipe.rnp.br/api/norte)**
-- Realiza cálculos de **disponibilidade média**, **uso de banda** e **qualidade do serviço**
-- Armazena os resultados no banco PostgreSQL.
-
-###  **3. Banco de Dados (PostgreSQL - monitoring_db)**
-- Contém as tabelas `network_monitor` e `viaipe_monitor` para armazenar os dados coletados.
-
-###  **4. Grafana (monitoring_grafana)**
-- Visualização dos dados em **dashboards interativos**
-- Permite análise de padrões de disponibilidade e latência
-
----
-
-##  Estrutura do Banco de Dados
-
-### **Tabela: `network_monitor`** (Monitoramento Web)
-| Campo         | Tipo          | Descrição                                    |
-|--------------|--------------|---------------------------------------------|
-| `id`        | SERIAL       | Chave primária                              |
-| `host`      | TEXT         | Nome do site monitorado                     |
-| `latency`   | FLOAT        | Tempo de resposta em ms                     |
-| `load_time` | FLOAT        | Tempo de carregamento da página (ms)        |
-| `status_code` | INTEGER    | Código de resposta HTTP (ex: 200, 404)      |
-| `timestamp` | TIMESTAMP    | Data e hora da coleta                       |
-
-### **Tabela: `viaipe_monitor`** (Coleta ViaIpe)
-| Campo         | Tipo          | Descrição                                    |
-|--------------|--------------|---------------------------------------------|
-| `id`        | SERIAL       | Chave primária                              |
-| `availability` | FLOAT     | Disponibilidade média (%)                   |
-| `bandwidth` | FLOAT        | Consumo médio de banda (Mbps)               |
-| `timestamp` | TIMESTAMP    | Data e hora da coleta                       |
-
----
-
-##  Como Executar o Projeto
-
-### **1️ Clonar o repositório**
+### **1 Clonar o repositório**
 ```sh
-git clone https://github.com/seu-usuario/monitoring-agent.git
+git clone <URL_DO_REPOSITORIO>
 cd monitoring-agent
 ```
 
-### **2️ Subir os containers**
+### **2 Subir os containers**
 ```sh
-docker-compose up -d --build
+docker-compose up -d
 ```
-Isso iniciará os serviços **PostgreSQL, Grafana, Agente de Monitoramento e Coletor ViaIpe**.
+Isso iniciará os seguintes containers:
+- `monitoring_agent` - Coleta a latência dos sites e armazena no banco.
+- `viaipe_collector` - Obtém estatísticas da API ViaIpe e armazena no banco.
+- `monitoring_db` - Banco de dados PostgreSQL.
+- `monitoring_grafana` - Interface para visualização dos dados.
 
-### **3️ Acessar o Grafana**
- Abra no navegador: **[http://localhost:3000](http://localhost:3000)**
-- Usuário: `admin`
-- Senha: `admin`
-
-### **4️ Verificar se os dados estão sendo coletados**
-```sh
-docker exec -it monitoring_db psql -U user -d monitoring -c "SELECT * FROM network_monitor LIMIT 5;"
+### **3 Acessar os dashboards no Grafana**
+Abra o navegador e acesse:
 ```
-```sh
-docker exec -it monitoring_db psql -U user -d monitoring -c "SELECT * FROM viaipe_monitor LIMIT 5;"
+http://localhost:3000
 ```
-Se os dados aparecerem, significa que a coleta está funcionando corretamente. ✅
+- **Usuário:** `admin`
+- **Senha:** `admin` (ou a senha configurada no `docker-compose.yml`)
 
-### **5️ Acessar os dashboards no Grafana**
-- No menu lateral, vá para **"Dashboards"** e selecione o dashboard desejado.
+##  **Banco de Dados**
+O banco PostgreSQL possui duas tabelas principais:
 
----
+### **1 network_monitor** (Monitoramento de sites)
+| id  | timestamp  | host   | latency | load_time | status_code |
+|-----|------------|--------|---------|------------|-------------|
+| 1   | 2025-03-11 13:03:53 | rnp.br  | 13.7    | 234  | 200 |
+| 2   | 2025-03-11 13:03:52 | youtube.com | 18.5    | 612  | 200 |
+| 3   | 2025-03-11 13:03:52 | google.com  | 16.0    | 606  | 200 |
 
-## 🔍 Troubleshooting (Solução de Problemas)
+### **2 viaipe_monitor** (Disponibilidade e Banda - ViaIpe)
+| id  | timestamp  | availability | bandwidth |
+|-----|------------|--------------|------------|
+| 1   | 2025-03-11 12:54:50 | 1.15  | 21694651 |
+| 2   | 2025-03-11 12:55:02 | 1.15  | 21694651 |
+| 3   | 2025-03-11 12:56:02 | 1.15  | 21690665 |
 
-### **Erro: Grafana não conecta ao PostgreSQL**
-Verifique se o banco está acessível a partir do container do Grafana:
-```sh
-docker exec -it monitoring_grafana psql -h monitoring_db -U user -d monitoring -c "\dt"
-```
-Se houver erro de conexão, pode ser necessário editar a configuração do PostgreSQL e reiniciar os containers.
+##  **Prints dos Dashboards**
+### **1 Latência dos Sites Monitorados**
+![Latência dos Sites Monitorados](./LatenciaGrafana.PNG)
 
-### **Erro: Nenhum dado aparece no Grafana**
-1. Verifique se os scripts de coleta estão rodando:
-```sh
-docker logs monitoring_agent --tail 50
-docker logs viaipe_collector --tail 50
-```
-2. Verifique se os dados estão sendo inseridos corretamente no PostgreSQL.
-3. Atualize as queries no Grafana para o intervalo correto de tempo.
+### **2 Disponibilidade e Banda (ViaIpe)**
+![Disponibilidade e Banda - ViaIpe](./ViaIpedisponibilidadeebanda.png)
 
-### **Erro: Banco de dados não responde**
-Reinicie o banco:
-```sh
-docker restart monitoring_db
-```
 
----
 
-##  Estrutura do Projeto
 
-📂 monitoring-agent
-├── 📁 agent   # Coletor de latência e status HTTP
-├── 📁 viaipe_collector   # Coletor de dados ViaIpe
-├── 📁 grafana           # Dashboards e configuração do Grafana
-├── 📁 postgres          # Banco de dados PostgreSQL
-├── 📄 docker-compose.yml  # Orquestração dos serviços
-├── 📄 README.md          # Documentação do projeto
-```
-
----
 
 ## 📬 Contato
 📧 Email: **moacirsistemax@gmail.com**
